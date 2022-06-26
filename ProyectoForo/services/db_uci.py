@@ -1,8 +1,8 @@
 import mysql.connector
 
 dbuci = mysql.connector.connect(
-    host="btayogimwuf6ppd8dtgu-mysql.services.clever-cloud.com",
-    user="uzkqujyps8yvnfwd",
-    password="LMRyKb5ygYFGs32bg0W5",
-    database="btayogimwuf6ppd8dtgu"
+    host="bv6tf0hgjoc5mbfa4ym8-mysql.services.clever-cloud.com",
+    user="uhqtc9sqmhf6wmkt",
+    password="apEIuCUtURRkZeQVAvFH",
+    database="bv6tf0hgjoc5mbfa4ym8"
 )
