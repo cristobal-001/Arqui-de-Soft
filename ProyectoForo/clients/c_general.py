@@ -1,11 +1,17 @@
 import socket, json
 from os import system, name
 from comunicacion import clearS, sendT, listenB
+
+
+
+
+postear = "postr"
 rgtr = "ccdsu"  # Registro
 lgin = "ccdli"  # Ingreso
 gtdb = "ccddb"  # Consultar datos
 
-sesion = {"username":None,"password":None,"rol":None}
+
+sesion = {"username":None,"password":None,"es_admin":None}
 sckt = None
 
 def menuSULI():
@@ -30,14 +36,16 @@ def menuSULI():
         menuSULI()
 
 def menuSU():
+
+
     username = None
     password = None
-    rol = 2 # Usuario general
+
     clearS()
 
     menuUN = """
     ***************************************
-    * Usuario general                     *
+    * Usuario                             *
     *-------------------------------------*
     * Registro de usuario                 *
     * Ingresar nombre de usuario          *
@@ -58,6 +66,21 @@ def menuSU():
     Contraseña: """
     clearS()
     password = input(menuPW)
+
+
+    menuEmail = """
+    ***************************************
+    * Usuario general                     *
+    *-------------------------------------*
+    * Registro de usuario                 *
+    * Ingresar contraseña                 *
+    ***************************************
+    
+    Correo electrónico : """
+    clearS()
+    email = input(menuEmail)
+
+
     menuYN = f""""
     ***************************************
     * Usuario general                     *
@@ -67,14 +90,14 @@ def menuSU():
     ***************************************
     
     Usuario: {username}
+    Correo: {email}
     Contraseña: {password}
-    Rol: {"Administrador" if rol == "1" else "General"}
     
     Opción: """
     clearS()
     yn = input(menuYN)
     if yn == 'y':
-        arg = {"username": username, "password": password, "rol": "2"}
+        arg = {"username": username, "password": password, "email": email, "es_admin": 0}
         sendT(sckt, rgtr, json.dumps(arg))
         nS, msgT = listenB(sckt)
         msg = json.loads(msgT[12:])
@@ -97,7 +120,7 @@ def menuLI():
     * Ingresar nombre de usuario          *
     ***************************************
 
-    Usuario: """   
+    Nombre : """   
     clearS()
     username = input(menuUN)
 
@@ -113,14 +136,11 @@ def menuLI():
     clearS()
     password = input(menuPW)
 
-    arg = {"username": username, "password": password, "rol": 2}
-    #arg = {"username": username, "password": password, "rol": rol}
-
-    sendT(sckt, lgin, json.dumps(arg)) #Argumentos: socket, nombre del servicio, contenido que se envía
-    
-    nS, msgT=listenB(sckt) #Esto responde el bus nombre del servicio + mensaje de respuesta
-
+    arg = {"username": username, "password": password}
+    sendT(sckt, lgin, json.dumps(arg)) # Chequeo de la existencia en bdd
+    nS, msgT=listenB(sckt)
     msg = json.loads(msgT[12:])
+
     if nS == lgin:
         if msg["respuesta"] == "No es posible entrar con el usuario ingresado.":
             input("No se ha podido iniciar sesión.")
@@ -128,7 +148,8 @@ def menuLI():
         else:
             global sesion
             sesion=msg["respuesta"]
-            if sesion["rol"] == 2:
+            print(sesion)
+            if sesion["es_admin"] == 0:
                 menuGD()
             else:
                 menuLI()
@@ -136,28 +157,72 @@ def menuLI():
 def menuGD():
     menuGD2 = """
     ***************************************
-    * Usuario general                     *
+    *                                     *
     *-------------------------------------*
-    * Consultar datos                     *
+    * Consultar foro                      *
     * Elija una opción                    *
     *-------------------------------------*
-    * 1) Pasillos                         *
-    * 2) Piezas                           *
-    * 3) Camas                            *
-    * 4) Pacientes                        *
-    * 5) Personal Médico                  *
-    * 6) Respiradores                     *
-    *                                     *
-    * 7) Cerrar sesión                    *
+    * 1) Postear en el foro               *                        
+    * 2) Ver Foros                        *
+    * 0) Cerrar sesión                    *
     ***************************************
     
     Opción: """
     opcion = int(input(menuGD2))
-    if opcion == 7:
-        #arg = {"username": None, "password": None, "rol": None}
-        #sendT(sckt, lgin, json.dumps(arg))
-        menuSULI()
+
+    if opcion == 1:
+        clearS()
+        menuCategorias = """
+    ***************************************
+    * Seleccione una categoría            *
+    *-------------------------------------*
+    * 1) Accidente                        *
+    * 2) Choque                           *
+    ***************************************
+
+    Categoria : """
+    temp_cat = int(input(menuCategorias))
+    if(temp_cat > 4 ):
+        print("Categoria inexistente")
+        menuGD()
+    
     else:
+
+        categoria = temp_cat
+        content  = input("Escriba su denuncia : ")
+        clearS()
+        menuAnonimo = """
+            ***************************************
+            * Confirme                            *
+            *-------------------------------------*
+            * Anónimo [y/n]                       *
+            ***************************************
+        """
+        if(input(menuAnonimo) == 'y'):
+            es_anonimo = 1
+        else:
+            es_anonimo = 0
+        
+        print(sesion)
+
+        arg = {"nombre": sesion["username"],"categoria_id": categoria, "contenido": content, "es_anonimo":es_anonimo}
+        sendT(sckt,postear,json.dumps(arg))
+        
+        nombre, contenido = listenB(sckt)
+        print("bugging",contenido[12:])
+
+        if(contenido[12:] == "Post agregado"):
+            menuGD()
+        
+
+        elif (opcion == 2):
+            return
+
+        """arg = {"username": None, "password": None, "rol": None}
+        sendT(sckt, lgin, json.dumps(arg))
+        menuSULI()"""
+
+    """else:
         arg = {"opcion": opcion}
         sendT(sckt, gtdb, json.dumps(arg))
         nS, msgT = listenB(sckt)
@@ -168,7 +233,8 @@ def menuGD():
 
                 enter = input("Presione enter para continuar. ")
                 clearS()
-                menuGD()
+                menuGD()"""
+
 
 if __name__ == "__main__":
     try:
