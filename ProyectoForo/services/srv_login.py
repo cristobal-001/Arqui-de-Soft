@@ -6,10 +6,12 @@ srv = 'ccdli'
 #log in usuario
 def loginU(login):
     crsr = dbuci.cursor()
-    crsr.execute("SELECT * FROM users WHERE username = %s AND password = %s AND rol = %s", (login["username"],login["password"],login["rol"]))
+    crsr.execute("SELECT * FROM Usuario WHERE nombre = %s AND contrasena = %s", (login["username"],login["password"]))
     fetched = crsr.fetchone()
+    print("fetched")
     if fetched:
-        response = {"respuesta":{"username":fetched[1],"password":fetched[2],"rol":fetched[3]}}
+        print(fetched)
+        response = {"respuesta":{"username":fetched[1],"password":fetched[2],"es_admin":fetched[4]}}
         sendT(sckt, srv, json.dumps(response))
     else:
         response = {"respuesta":"No es posible entrar con el usuario ingresado."}
@@ -33,5 +35,7 @@ if __name__ == "__main__":
         if nS == srv:
             loginU(login = json.loads(mT))
         else:
+            response = {"respuesta":"servicio equivocado"}
+            sendT(sckt, srv, json.dumps(response))
             response = {"respuesta":"servicio equivocado"}
             sendT(sckt, srv, json.dumps(response))
