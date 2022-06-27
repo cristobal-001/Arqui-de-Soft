@@ -5,24 +5,20 @@ srv = 'ccdsu'
 
 #Registrar usuario
 def registerU(rgtr): #Parametro de entrada OKccdsu
+    
     crsr = dbuci.cursor()
-    crsr.execute("SELECT username FROM users WHERE username = %s", (rgtr["username"],))
+    crsr.execute("SELECT usuario_id FROM Usuario WHERE usuario_id = %s", (rgtr["username"],))
     fetched = crsr.fetchone()
+
     if fetched == None:
-        if rgtr["rol"] in ["1","2"]:
-            #rol = "administrador" if rgtr["rol"] == "1" else "general"
-            crsr.execute("INSERT INTO users (username, password, rol) VALUES(%s, %s, %s)", (rgtr["username"],rgtr["password"], rgtr["rol"]))
-            dbuci.commit()
-            response = {"respuesta":"El usuario ha sido registrado exitosamente."}
-            sendT(sckt, srv, json.dumps(response))
-        else:
-            response = {"respuesta":"No se ha podido registrar al usuario."}
-            sendT(sckt, srv, json.dumps(response))
+        #rol = "administrador" if rgtr["rol"] == "1" else "general"
+        crsr.execute("INSERT INTO Usuario (nombre, email, contrasena, es_admin) VALUES(%s, %s,%s,%s)", (rgtr["username"],rgtr["email"],rgtr["password"],rgtr["es_admin"]))
+        dbuci.commit()
+        response = {"respuesta":"El usuario ha sido registrado exitosamente."}
+        sendT(sckt, srv, json.dumps(response))
     else:
         response = {"respuesta":"El usuario introducido ya se encuentra registrado."}
         sendT(sckt, srv, json.dumps(response))
-
-
 
 if __name__ == "__main__":
     try:
